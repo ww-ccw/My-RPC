@@ -1,6 +1,8 @@
 package org.chw.test;
 
 import org.chw.rpc.api.HelloService;
+import org.chw.rpc.registry.DefaultServiceRegistry;
+import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.server.RpcServer;
 
 /**
@@ -12,7 +14,9 @@ public class TestServer {
     
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl();
-        RpcServer rpcServer = new RpcServer();
-        rpcServer.register(helloService , 9000);
+        ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
+        serviceRegistry.registry(helloService);
+        RpcServer rpcServer = new RpcServer(serviceRegistry);
+        rpcServer.start( 9000);
     }
 }

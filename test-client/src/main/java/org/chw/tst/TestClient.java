@@ -2,7 +2,8 @@ package org.chw.tst;
 
 import org.chw.rpc.api.HelloObject;
 import org.chw.rpc.api.HelloService;
-import org.chw.rpc.client.RpcClientProxy;
+import org.chw.rpc.RpcClientProxy;
+import org.chw.rpc.socket.client.SocketClient;
 
 /**
  * @Author CHW
@@ -11,10 +12,11 @@ import org.chw.rpc.client.RpcClientProxy;
  **/
 public class TestClient {
     public static void main(String[] args) {
-        RpcClientProxy proxy = new RpcClientProxy("localhost" , 9000);
+        SocketClient client = new SocketClient("127.0.0.1", 9000);
+        RpcClientProxy proxy = new RpcClientProxy(client);
         HelloService helloService = proxy.getProxy(HelloService.class);
         HelloObject object = new HelloObject(12 , "This is a message");
-        String res = helloService.Hello(object);
+        String res = helloService.hello(object);
         System.out.println(res);
     }
 }

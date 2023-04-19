@@ -1,35 +1,24 @@
-package org.chw.rpc.server;
+package org.chw.rpc;
 
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
 import org.chw.rpc.enumeration.ResponseCode;
-import org.chw.rpc.registry.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.Socket;
 
 /**
+ * 实际进行过程调用的工作线程
  * @Author CHW
  * @Date 2023/4/17
- * 实际进行过程调用的工作线程
  **/
 public class RequestHandler {
     
-    private static RequestHandler requestHandler = new RequestHandler();
-    
-    public static RequestHandler getRequestHandler() {
-        return requestHandler;
-    }
-    
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
     
-    public static Object handle(RpcRequest rpcRequest, Object service) {
+    public  Object handle(RpcRequest rpcRequest, Object service) {
         Object result = null;
         try {
             result = invokeTargetMethod(rpcRequest, service);
@@ -39,7 +28,7 @@ public class RequestHandler {
         } return result;
     }
     
-    private static Object invokeTargetMethod(RpcRequest rpcRequest, Object service) throws IllegalAccessException, InvocationTargetException {
+    private  Object invokeTargetMethod(RpcRequest rpcRequest, Object service) throws IllegalAccessException, InvocationTargetException {
         Method method;
         try {
             method = service.getClass().getMethod(rpcRequest.getMethodName(), rpcRequest.getParamTypes());

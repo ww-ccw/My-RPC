@@ -5,5 +5,5 @@ package org.chw.rpc.api;
  * @Date 2023/4/17
  **/
 public interface HelloService {
-    String Hello(HelloObject object);
+    String hello(HelloObject object);
 }

@@ -15,7 +15,7 @@ public class HelloServiceImpl implements HelloService {
     private static final Logger logger = LoggerFactory.getLogger(HelloServiceImpl.class);
     
     @Override
-    public String Hello(HelloObject object) {
+    public String hello(HelloObject object) {
         logger.info("接受到: {}" , object.getMessage());
         return "这是用掉的返回值,id="+object.getId();
     }

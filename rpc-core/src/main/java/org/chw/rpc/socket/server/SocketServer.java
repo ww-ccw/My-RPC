@@ -1,5 +1,6 @@
-package org.chw.rpc.server;
+package org.chw.rpc.socket.server;
 
+import org.chw.rpc.RpcServer;
 import org.chw.rpc.registry.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,13 +11,13 @@ import java.net.Socket;
 import java.util.concurrent.*;
 
 /**
+ * 远程方法的服务提供者（服务端）
+ * 监听端口，接受请求
  * @Author CHW
  * @Date 2023/4/17
- *
- * 远程方法的服务提供者（服务端）
  **/
-public class RpcServer {
-    private static final Logger logger = LoggerFactory.getLogger(RpcServer.class);
+public class SocketServer implements RpcServer {
+    private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
     
     private final int CORE_POOL_SIZE = 5;
     private final int MAXIMUM_POOL_SIZE = 50;
@@ -28,7 +29,7 @@ public class RpcServer {
     //服务注册表
     private final ServiceRegistry serviceRegistry;
     
-    public RpcServer(ServiceRegistry serviceRegistry) {
+    public SocketServer(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
         
         BlockingQueue<Runnable> workingQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);

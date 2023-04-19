@@ -1,5 +1,6 @@
-package org.chw.rpc.server;
+package org.chw.rpc.socket.server;
 
+import org.chw.rpc.RequestHandler;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
 import org.chw.rpc.registry.ServiceRegistry;
@@ -12,6 +13,8 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
+ * 服务端接收到请求后的处理任务
+ *
  * @Author CHW
  * @Date 2023/4/18
  **/
@@ -25,7 +28,7 @@ public class RequestHandlerThread implements Runnable {
     
     public RequestHandlerThread(Socket socket, ServiceRegistry serviceRegistry) {
         this.socket = socket;
-        this.requestHandler = RequestHandler.getRequestHandler();
+        this.requestHandler = new RequestHandler();
         this.serviceRegistry = serviceRegistry;
     }
     

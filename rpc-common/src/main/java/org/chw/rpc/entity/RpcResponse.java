@@ -1,6 +1,7 @@
 package org.chw.rpc.entity;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.chw.rpc.enumeration.ResponseCode;
 
 import java.io.Serializable;
@@ -10,6 +11,7 @@ import java.io.Serializable;
  * 服务提供者处理完消费者的请求或者出错了，返回的对象
  */
 @Data
+@NoArgsConstructor
 public class RpcResponse<T> implements Serializable {
     
     /**
@@ -26,7 +28,7 @@ public class RpcResponse<T> implements Serializable {
      * 响应数据
      */
     private T data;
-    
+
     public static <T> RpcResponse<T> success(T data){
         RpcResponse<T> response = new RpcResponse<>();
         response.setStatusCode(ResponseCode.SUCCESS.getCode());

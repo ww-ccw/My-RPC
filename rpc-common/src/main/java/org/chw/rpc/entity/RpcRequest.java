@@ -1,7 +1,9 @@
 package org.chw.rpc.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -10,9 +12,10 @@ import java.io.Serializable;
  * 消费者向服务者发生的请求对象,传输格式
  */
 @Data
-@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class RpcRequest implements Serializable {
-    
+
     /**
      * 待调用接口名称
      */

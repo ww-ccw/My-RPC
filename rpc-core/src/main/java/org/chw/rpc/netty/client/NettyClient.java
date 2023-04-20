@@ -20,6 +20,9 @@ import org.chw.rpc.util.RpcMessageChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * 使用Netty实现的NIO方式的客户端类
  * @Author CHW
@@ -68,33 +71,21 @@ public class NettyClient implements RpcClient {
             logger.error("未设置序列化器");
             throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
         }
-        
-        //设置客户端的ChannelHandler，用于处理IO操作。
-        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-        
-            @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-                ChannelPipeline pipeline = ch.pipeline();
-                //ChannelPipeline添加的Handle必须是ChannelInboundHandler和ChannelOutboundHandler之一,一个是处理入站数据，一个处理出站数据。按添加顺序处理
-                pipeline.addLast(new CommonDecoder())
-                        .addLast(new CommonEncoder(new HessianSerializer()))
-                        .addLast(new NettyClientHandler());
-            }
-        });
+    
+        //创建一个原子的返回类
+        AtomicReference<Object> result = new AtomicReference<>(null);
         
         try{
-            //创建一个ChannelFuture实例future，表示异步的I/O操作的结果，sync会阻塞当前线程，直到连接成功或超时
-            ChannelFuture future = bootstrap.connect(host , port).sync();
-            logger.info("客户端连接到服务器{}:{}" , host , port);
-            //获取连接成功的Channel实例
-            Channel channel = future.channel();
-            if (channel != null){
+            //获取channel
+            Channel channel = ChannelProvider.get(new InetSocketAddress(host, port), serializer);
+            //如果channel已经获得且
+            if(channel.isActive()) {
                 //向channel写入rpcRequest对象并刷新，添加一个监听器来处理操作结果。如果future1操作成功，打印“客户端发送消息”信息；否则，打印相应的错误信息。
                 channel.writeAndFlush(rpcRequest).addListener(future1 -> {
                     if (future1.isSuccess()){
                         logger.info(String.format("客户端发送消息: %s" , rpcRequest.toString()));
                     }else {
-                        logger.error("发送消息时有错误发生:" , future.cause());
+                        logger.error("发送消息时有错误发生:" , future1.cause());
                     }
                 });
                 //关闭channel
@@ -103,14 +94,15 @@ public class NettyClient implements RpcClient {
                 AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse" + rpcRequest.getRequestId());
                 RpcResponse rpcResponse = channel.attr(key).get();
                 RpcMessageChecker.check(rpcRequest, rpcResponse);
-                //返回RpcResponse对象的data属性值。
-                return rpcResponse.getData();
+                
+                result.set(rpcResponse.getData());
+            } else {
+                System.exit(0);
             }
-            
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return null;
+        return result.get();
     }
     
 

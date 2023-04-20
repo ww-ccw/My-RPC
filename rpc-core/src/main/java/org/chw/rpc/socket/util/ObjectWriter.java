@@ -32,14 +32,14 @@ public class ObjectWriter {
     }
     
     /**
-     * 整数（int）转换成字节数组（byte[]）是为了将其在网络上传输时按照大端字节序进行存储
+     * 整数（int）转换成字节数组（byte[]）是为了将其在网络上传输时按照小端字节序进行存储，使用小端序使之能与Netty服务端通信。
      */
     private static byte[] intToBytes(int value) {
-        byte[] des = new byte[4];
-        des[3] =  (byte) ((value>>24) & 0xFF);
-        des[2] =  (byte) ((value>>16) & 0xFF);
-        des[1] =  (byte) ((value>>8) & 0xFF);
-        des[0] =  (byte) (value & 0xFF);
-        return des;
+        byte[] src = new byte[4];
+        src[0] = (byte) ((value>>24) & 0xFF);
+        src[1] = (byte) ((value>>16)& 0xFF);
+        src[2] = (byte) ((value>>8)&0xFF);
+        src[3] = (byte) (value & 0xFF);
+        return src;
     }
 }

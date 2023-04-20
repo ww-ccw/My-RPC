@@ -53,13 +53,13 @@ public class ObjectReader {
         in.read(bytes);
         return serializer.deserialize(bytes, packageClass);
     }
-
+    
     public static int bytesToInt(byte[] src) {
         int value;
-        value = (src[0] & 0xFF)
-                | ((src[1] & 0xFF)<<8)
-                | ((src[2] & 0xFF)<<16)
-                | ((src[3] & 0xFF)<<24);
+        value = ((src[0] & 0xFF)<<24)
+                |((src[1] & 0xFF)<<16)
+                |((src[2] & 0xFF)<<8)
+                |(src[3] & 0xFF);
         return value;
     }
 

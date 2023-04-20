@@ -21,6 +21,6 @@ public class SocketTestServer {
         serviceRegistry.register(helloService);
         RpcServer rpcServer = new SocketServer(serviceRegistry);
         rpcServer.setSerializer(new HessianSerializer());
-        rpcServer.start( 9000);
+        rpcServer.start( 9999);
     }
 }

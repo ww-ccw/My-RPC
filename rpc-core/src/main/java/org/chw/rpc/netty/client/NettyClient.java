@@ -11,6 +11,9 @@ import org.chw.rpc.codec.CommonDecoder;
 import org.chw.rpc.codec.CommonEncoder;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
+import org.chw.rpc.enumeration.RpcError;
+import org.chw.rpc.exception.RpcException;
+import org.chw.rpc.serializer.CommonSerializer;
 import org.chw.rpc.serializer.HessianSerializer;
 import org.chw.rpc.serializer.KryoSerializer;
 import org.slf4j.Logger;
@@ -24,17 +27,11 @@ import org.slf4j.LoggerFactory;
 public class NettyClient implements RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(NettyClient.class);
     
-    private String host;
-    private int port;
+    
     /**
      * 用于配置和启动Netty客户端的各种参数，例如线程、通道类型、处理器等。一旦配置好了，就可以调用Bootstrap.connect()方法连接到服务器。
      */
     private static final Bootstrap bootstrap;
-    
-    public NettyClient(String host, int port) {
-        this.host = host;
-        this.port = port;
-    }
     
     static {
         bootstrap = new Bootstrap();
@@ -44,25 +41,46 @@ public class NettyClient implements RpcClient {
                 //指定连接类型为NIO
                 .channel(NioSocketChannel.class)
                 //设置SO_KEEPALIVE选项，保持连接状态。SO_KEEPALIVE会通过心跳来测试连接是否存在
-                .option(ChannelOption.SO_KEEPALIVE , true)
-                //设置客户端的ChannelHandler，用于处理IO操作。
-                .handler(new ChannelInitializer<SocketChannel>() {
+                .option(ChannelOption.SO_KEEPALIVE , true);
+    }
     
-                    @Override
-                    protected void initChannel(SocketChannel ch) throws Exception {
-                        ChannelPipeline pipeline = ch.pipeline();
-                        //ChannelPipeline添加的Handle必须是ChannelInboundHandler和ChannelOutboundHandler之一,一个是处理入站数据，一个处理出站数据。按添加顺序处理
-                        pipeline.addLast(new CommonDecoder())
-                                .addLast(new CommonEncoder(new HessianSerializer()))
-                                .addLast(new NettyClientHandler());
-                    }
-                });
+    private String host;
+    private int port;
+    private CommonSerializer serializer;
+    
+    public NettyClient(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+    
+    @Override
+    public void setSerializer(CommonSerializer serializer) {
+        this.serializer = serializer;
     }
     
 
     
     @Override
     public Object sendRequest(RpcRequest rpcRequest) {
+    
+        if(serializer == null) {
+            logger.error("未设置序列化器");
+            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
+        }
+        
+        //设置客户端的ChannelHandler，用于处理IO操作。
+        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+        
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+                //ChannelPipeline添加的Handle必须是ChannelInboundHandler和ChannelOutboundHandler之一,一个是处理入站数据，一个处理出站数据。按添加顺序处理
+                pipeline.addLast(new CommonDecoder())
+                        .addLast(new CommonEncoder(new HessianSerializer()))
+                        .addLast(new NettyClientHandler());
+            }
+        });
+        
         try{
             //创建一个ChannelFuture实例future，表示异步的I/O操作的结果，sync会阻塞当前线程，直到连接成功或超时
             ChannelFuture future = bootstrap.connect(host , port).sync();
@@ -93,4 +111,6 @@ public class NettyClient implements RpcClient {
         }
         return null;
     }
+    
+
 }

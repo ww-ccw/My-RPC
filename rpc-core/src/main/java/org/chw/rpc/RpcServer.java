@@ -1,5 +1,7 @@
 package org.chw.rpc;
 
+import org.chw.rpc.serializer.CommonSerializer;
+
 /**
  * 服务端接口，服务端的实现可以有不同的方式，基于Socket、Netty等
  *
@@ -8,4 +10,6 @@ package org.chw.rpc;
  **/
 public interface RpcServer {
     void start(int port);
+    
+    void setSerializer(CommonSerializer serializer);
 }

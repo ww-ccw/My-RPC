@@ -10,9 +10,10 @@ import io.netty.handler.logging.LoggingHandler;
 import org.chw.rpc.RpcServer;
 import org.chw.rpc.codec.CommonDecoder;
 import org.chw.rpc.codec.CommonEncoder;
+import org.chw.rpc.enumeration.RpcError;
+import org.chw.rpc.exception.RpcException;
+import org.chw.rpc.serializer.CommonSerializer;
 import org.chw.rpc.serializer.HessianSerializer;
-import org.chw.rpc.serializer.JsonSerializer;
-import org.chw.rpc.serializer.KryoSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +27,21 @@ public class NettyServer implements RpcServer {
     
     private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
     
+    private CommonSerializer serializer;
+    
+    @Override
+    public void setSerializer(CommonSerializer serializer) {
+        this.serializer = serializer;
+    }
+    
     @Override
     public void start(int port) {
+    
+        if(serializer == null) {
+            logger.error("未设置序列化器");
+            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
+        }
+        
         // 创建线程组，用于处理连接请求
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         // 创建线程组，用于处理已建立连接的 IO 读写操作
@@ -52,11 +66,11 @@ public class NettyServer implements RpcServer {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
-                            // 添加序列化编码器，将对象转化为字节数组进行网络传输
+                            // 添加序列化编码器
                             pipeline.addLast(new CommonEncoder(new HessianSerializer()));
-                            // 添加序列化解码器，将字节数组转化为对象
+                            // 添加序列化解码器
                             pipeline.addLast(new CommonDecoder());
-                            // 添加业务处理器，用于处理具体的业务逻辑
+                            // 添加业务处理器
                             pipeline.addLast(new NettyServerHandler());
                         }
                     });

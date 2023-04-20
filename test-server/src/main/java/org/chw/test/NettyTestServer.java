@@ -4,6 +4,7 @@ import org.chw.rpc.api.HelloService;
 import org.chw.rpc.netty.server.NettyServer;
 import org.chw.rpc.registry.DefaultServiceRegistry;
 import org.chw.rpc.registry.ServiceRegistry;
+import org.chw.rpc.serializer.KryoSerializer;
 
 /**
  * @Author CHW
@@ -12,9 +13,11 @@ import org.chw.rpc.registry.ServiceRegistry;
 public class NettyTestServer {
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl();
+        
         ServiceRegistry registry = new DefaultServiceRegistry();
         registry.register(helloService);
         NettyServer server = new NettyServer();
+        server.setSerializer(new KryoSerializer());
         server.start(9999);
     }
 }

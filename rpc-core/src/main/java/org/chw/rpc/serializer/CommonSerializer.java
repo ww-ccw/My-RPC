@@ -16,10 +16,15 @@ public interface CommonSerializer {
      */
     Object deserialize(byte[] bytes , Class<?> clazz);
     
+    /**
+     * 得到(反)序列化器的代码
+     */
     int getCode();
     
     static CommonSerializer getByCode(int code){
         switch (code){
+            case 0:
+                return new KryoSerializer();
             case 1:
                 return new JsonSerializer();
             default:

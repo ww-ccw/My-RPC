@@ -11,6 +11,7 @@ import org.chw.rpc.codec.CommonDecoder;
 import org.chw.rpc.codec.CommonEncoder;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
+import org.chw.rpc.serializer.HessianSerializer;
 import org.chw.rpc.serializer.KryoSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ public class NettyClient implements RpcClient {
                         ChannelPipeline pipeline = ch.pipeline();
                         //ChannelPipeline添加的Handle必须是ChannelInboundHandler和ChannelOutboundHandler之一,一个是处理入站数据，一个处理出站数据。按添加顺序处理
                         pipeline.addLast(new CommonDecoder())
-                                .addLast(new CommonEncoder(new KryoSerializer()))
+                                .addLast(new CommonEncoder(new HessianSerializer()))
                                 .addLast(new NettyClientHandler());
                     }
                 });

@@ -10,6 +10,7 @@ import io.netty.handler.logging.LoggingHandler;
 import org.chw.rpc.RpcServer;
 import org.chw.rpc.codec.CommonDecoder;
 import org.chw.rpc.codec.CommonEncoder;
+import org.chw.rpc.serializer.HessianSerializer;
 import org.chw.rpc.serializer.JsonSerializer;
 import org.chw.rpc.serializer.KryoSerializer;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public class NettyServer implements RpcServer {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
                             // 添加序列化编码器，将对象转化为字节数组进行网络传输
-                            pipeline.addLast(new CommonEncoder(new KryoSerializer()));
+                            pipeline.addLast(new CommonEncoder(new HessianSerializer()));
                             // 添加序列化解码器，将字节数组转化为对象
                             pipeline.addLast(new CommonDecoder());
                             // 添加业务处理器，用于处理具体的业务逻辑

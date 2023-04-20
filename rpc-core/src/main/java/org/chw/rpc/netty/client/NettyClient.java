@@ -16,6 +16,7 @@ import org.chw.rpc.exception.RpcException;
 import org.chw.rpc.serializer.CommonSerializer;
 import org.chw.rpc.serializer.HessianSerializer;
 import org.chw.rpc.serializer.KryoSerializer;
+import org.chw.rpc.util.RpcMessageChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,9 +100,9 @@ public class NettyClient implements RpcClient {
                 //关闭channel
                 channel.closeFuture().sync();
                 //创建一个属性键key，用于获取channel的RpcResponse属性
-                AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
-                //从channel的属性中获取RpcResponse对象
+                AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse" + rpcRequest.getRequestId());
                 RpcResponse rpcResponse = channel.attr(key).get();
+                RpcMessageChecker.check(rpcRequest, rpcResponse);
                 //返回RpcResponse对象的data属性值。
                 return rpcResponse.getData();
             }

@@ -9,6 +9,7 @@ import org.chw.rpc.exception.RpcException;
 import org.chw.rpc.serializer.CommonSerializer;
 import org.chw.rpc.socket.util.ObjectReader;
 import org.chw.rpc.socket.util.ObjectWriter;
+import org.chw.rpc.util.RpcMessageChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,7 @@ public class SocketClient implements RpcClient {
                 logger.error("调用服务失败,service:{} , response:{}" , rpcRequest.getInterfaceName() , rpcResponse );
                 throw new RpcException(RpcError.SERVICE_INVOCATION_FAILURE , "service:"+rpcRequest.getInterfaceName());
             }
-            
+            RpcMessageChecker.check(rpcRequest, rpcResponse);
             return rpcResponse.getData();
         } catch (IOException e) {
             logger.error("调用远程方法时有错误发生" , e);

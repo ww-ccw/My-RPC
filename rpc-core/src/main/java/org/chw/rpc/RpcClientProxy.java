@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.UUID;
 
 /**
  * Author chw
@@ -41,10 +42,10 @@ public class RpcClientProxy implements InvocationHandler {
      * @return 服务提供者返回的data
      */
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args){
         logger.info("调用方法: {}#{}", method.getDeclaringClass().getName(), method.getName());
     
-        RpcRequest rpcRequest = new RpcRequest(method.getDeclaringClass().getName(),
+        RpcRequest rpcRequest = new RpcRequest( UUID.randomUUID().toString() , method.getDeclaringClass().getName(),
                 method.getName(), args, method.getParameterTypes());
         //发起请求返回结果
         return client.sendRequest(rpcRequest);

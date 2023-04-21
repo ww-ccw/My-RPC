@@ -78,7 +78,7 @@ public class NettyClient implements RpcClient {
         try{
             //获取channel
             Channel channel = ChannelProvider.get(new InetSocketAddress(host, port), serializer);
-            //如果channel已经获得且
+            //如果channel已经获得且处于活跃状态
             if(channel.isActive()) {
                 //向channel写入rpcRequest对象并刷新，添加一个监听器来处理操作结果。如果future1操作成功，打印“客户端发送消息”信息；否则，打印相应的错误信息。
                 channel.writeAndFlush(rpcRequest).addListener(future1 -> {
@@ -104,6 +104,4 @@ public class NettyClient implements RpcClient {
         }
         return result.get();
     }
-    
-
 }

@@ -1,12 +1,13 @@
-package org.chw.rpc.socket.server;
+package org.chw.rpc.transport.socket.server;
 
 import org.chw.rpc.RequestHandler;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
+import org.chw.rpc.provider.ServiceProvider;
 import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.serializer.CommonSerializer;
-import org.chw.rpc.socket.util.ObjectReader;
-import org.chw.rpc.socket.util.ObjectWriter;
+import org.chw.rpc.transport.socket.util.ObjectReader;
+import org.chw.rpc.transport.socket.util.ObjectWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,13 +26,13 @@ public class RequestHandlerThread implements Runnable {
     
     private Socket socket;
     private RequestHandler requestHandler;
-    private ServiceRegistry serviceRegistry;
+    private ServiceProvider serviceProvider;
     private CommonSerializer serializer;
     
-    public RequestHandlerThread(Socket socket, ServiceRegistry serviceRegistry , CommonSerializer serializer) {
+    public RequestHandlerThread(Socket socket, ServiceProvider serviceProvider , CommonSerializer serializer) {
         this.socket = socket;
         this.requestHandler = new RequestHandler();
-        this.serviceRegistry = serviceRegistry;
+        this.serviceProvider = serviceProvider;
         this.serializer = serializer;
     }
     
@@ -41,7 +42,7 @@ public class RequestHandlerThread implements Runnable {
              OutputStream outputStream = socket.getOutputStream()) {
             RpcRequest rpcRequest = (RpcRequest) ObjectReader.readObject(inputStream);
             String interfaceName = rpcRequest.getInterfaceName();
-            Object service = serviceRegistry.getService(interfaceName);
+            Object service = serviceProvider.getServiceProvider(interfaceName);
             Object result = requestHandler.handle(rpcRequest, service);
             RpcResponse<Object> response = RpcResponse.success(result , rpcRequest.getRequestId());
             ObjectWriter.writeObject(outputStream, response, serializer);

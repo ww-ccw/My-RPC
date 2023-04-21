@@ -1,6 +1,9 @@
-package org.chw.rpc.socket.server;
+package org.chw.rpc.transport.socket.server;
 
-import org.chw.rpc.RpcServer;
+import org.chw.rpc.provider.ServiceProvider;
+import org.chw.rpc.provider.ServiceProviderImpl;
+import org.chw.rpc.registry.NacosServiceRegistry;
+import org.chw.rpc.transport.RpcServer;
 import org.chw.rpc.enumeration.RpcError;
 import org.chw.rpc.exception.RpcException;
 import org.chw.rpc.registry.ServiceRegistry;
@@ -10,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
@@ -25,14 +29,32 @@ public class SocketServer implements RpcServer {
     
     //线程池
     private final ExecutorService threadPool;
-    //服务注册表
+    private final String host;
+    private final int port;
+    //服务注册中心
     private final ServiceRegistry serviceRegistry;
+    //本地服务表
+    private final ServiceProvider serviceProvider;
     //序列化器
     private CommonSerializer serializer;
     
-    public SocketServer(ServiceRegistry serviceRegistry) {
-        this.serviceRegistry = serviceRegistry;
+    public SocketServer(String host, int port) {
+        this.host = host;
+        this.port = port;
         threadPool = ThreadPoolFactory.createDefaultThreadPool("socket-rpc-server");
+        this.serviceRegistry = new NacosServiceRegistry();
+        this.serviceProvider = new ServiceProviderImpl();
+    }
+    
+    @Override
+    public <T> void publishService(Object service, Class<T> serviceClass) {
+        if(serializer == null) {
+            logger.error("未设置序列化器");
+            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
+        }
+        serviceProvider.addServiceProvider(service);
+        serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
+        start();
     }
     
     @Override
@@ -42,9 +64,9 @@ public class SocketServer implements RpcServer {
     
     /**
      * 等待到一个请求就开启一个工作线程处理
-     * @param port 监听端口号
      */
-    public void start(int port){
+    @Override
+    public void start(){
     
         if(serializer == null) {
             logger.error("未设置序列化器");
@@ -56,7 +78,7 @@ public class SocketServer implements RpcServer {
             Socket socket ;
             while((socket = serverSocket.accept()) != null){
                 logger.info("客户端连接!\tIP为"+socket.getInetAddress() + ":" + socket.getPort());
-                threadPool.execute(new RequestHandlerThread(socket , serviceRegistry , serializer));
+                threadPool.execute(new RequestHandlerThread(socket , serviceProvider , serializer));
             }
         } catch (IOException e) {
             logger.error("连接时有错误发生:" , e);

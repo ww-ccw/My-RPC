@@ -1,4 +1,4 @@
-package org.chw.rpc.netty.server;
+package org.chw.rpc.transport.netty.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -7,15 +7,20 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import org.chw.rpc.RpcServer;
+import org.chw.rpc.transport.RpcServer;
 import org.chw.rpc.codec.CommonDecoder;
 import org.chw.rpc.codec.CommonEncoder;
 import org.chw.rpc.enumeration.RpcError;
 import org.chw.rpc.exception.RpcException;
+import org.chw.rpc.provider.ServiceProvider;
+import org.chw.rpc.provider.ServiceProviderImpl;
+import org.chw.rpc.registry.NacosServiceRegistry;
+import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.serializer.CommonSerializer;
-import org.chw.rpc.serializer.HessianSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
 
 /**
  * 使用Netty NIO的方式的服务端
@@ -27,7 +32,20 @@ public class NettyServer implements RpcServer {
     
     private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
     
+    private final String host;
+    private final int port;
+
+    private final ServiceRegistry serviceRegistry;
+    private final ServiceProvider serviceProvider;
+    
     private CommonSerializer serializer;
+    
+    public NettyServer(String host, int port) {
+        this.host = host;
+        this.port = port;
+        serviceRegistry = new NacosServiceRegistry();
+        serviceProvider = new ServiceProviderImpl();
+    }
     
     @Override
     public void setSerializer(CommonSerializer serializer) {
@@ -35,48 +53,44 @@ public class NettyServer implements RpcServer {
     }
     
     @Override
-    public void start(int port) {
+    public <T> void publishService(Object service, Class<T> serviceClass) {
+        if (serializer == null){
+            logger.error("未设置序列化器");
+            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
+        }
+        serviceRegistry.register(serviceClass.getCanonicalName() , new InetSocketAddress(host , port));
+        serviceProvider.addServiceProvider(service);
+    }
+    
+    
+    @Override
+    public void start() {
     
         if(serializer == null) {
             logger.error("未设置序列化器");
             throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
         }
         
-        // 创建线程组，用于处理连接请求
         EventLoopGroup bossGroup = new NioEventLoopGroup();
-        // 创建线程组，用于处理已建立连接的 IO 读写操作
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
-            // 创建服务器启动引导类实例
             ServerBootstrap serverBootstrap = new ServerBootstrap();
-            // 设置 boss 线程组和 worker 线程组
             serverBootstrap.group(bossGroup, workerGroup)
-                    // 指定使用 NIO 传输 Channel
                     .channel(NioServerSocketChannel.class)
-                    // 添加日志处理器，输出 INFO 日志级别的日志信息
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    // 设置最大连接数为 256
                     .option(ChannelOption.SO_BACKLOG, 256)
-                    // 开启 TCP 底层心跳机制，保证连接活跃
                     .option(ChannelOption.SO_KEEPALIVE, true)
-                    // 关闭 Nagle 算法，降低延迟
                     .childOption(ChannelOption.TCP_NODELAY, true)
-                    // 初始化子 Channel 的处理器
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
-                            // 添加序列化编码器
-                            pipeline.addLast(new CommonEncoder(new HessianSerializer()));
-                            // 添加序列化解码器
+                            pipeline.addLast(new CommonEncoder(serializer));
                             pipeline.addLast(new CommonDecoder());
-                            // 添加业务处理器
                             pipeline.addLast(new NettyServerHandler());
                         }
                     });
-            // 绑定端口，并同步等待绑定结果
-            ChannelFuture future = serverBootstrap.bind(port).sync();
-            // 关闭 Channel，并同步等待关闭结果
+            ChannelFuture future = serverBootstrap.bind(host , port).sync();
             future.channel().closeFuture().sync();
             
         } catch (InterruptedException e) {

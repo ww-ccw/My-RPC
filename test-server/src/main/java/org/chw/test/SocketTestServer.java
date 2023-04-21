@@ -1,11 +1,9 @@
 package org.chw.test;
 
-import org.chw.rpc.RpcServer;
+import org.chw.rpc.transport.RpcServer;
 import org.chw.rpc.api.HelloService;
-import org.chw.rpc.registry.DefaultServiceRegistry;
-import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.serializer.HessianSerializer;
-import org.chw.rpc.socket.server.SocketServer;
+import org.chw.rpc.transport.socket.server.SocketServer;
 
 
 /**
@@ -17,10 +15,9 @@ public class SocketTestServer {
     
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl();
-        ServiceRegistry serviceRegistry = new DefaultServiceRegistry();
-        serviceRegistry.register(helloService);
-        RpcServer rpcServer = new SocketServer(serviceRegistry);
+        RpcServer rpcServer = new SocketServer("localhost" , 9999);
         rpcServer.setSerializer(new HessianSerializer());
-        rpcServer.start( 9999);
+        rpcServer.publishService(helloService, HelloService.class);
+        rpcServer.start( );
     }
 }

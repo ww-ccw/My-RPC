@@ -4,7 +4,7 @@ import org.chw.rpc.api.HelloObject;
 import org.chw.rpc.api.HelloService;
 import org.chw.rpc.RpcClientProxy;
 import org.chw.rpc.serializer.KryoSerializer;
-import org.chw.rpc.socket.client.SocketClient;
+import org.chw.rpc.transport.socket.client.SocketClient;
 
 /**
  * @Author CHW

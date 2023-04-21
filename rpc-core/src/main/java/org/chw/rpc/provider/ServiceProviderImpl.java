@@ -1,7 +1,8 @@
-package org.chw.rpc.registry;
+package org.chw.rpc.provider;
 
 import org.chw.rpc.enumeration.RpcError;
 import org.chw.rpc.exception.RpcException;
+import org.chw.rpc.registry.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,14 +11,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 默认服务注册表
+ * 默认服务注册表，保存服务端本地服务
  *
  * @Author CHW
  * @Date 2023/4/18
  **/
-public class DefaultServiceRegistry implements ServiceRegistry{
+public class ServiceProviderImpl implements ServiceProvider {
     
-    private static final Logger logger = LoggerFactory.getLogger(DefaultServiceRegistry.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServiceProviderImpl.class);
     
     /**
      * serviceMap中存了(接口规范名,服务实现对象)
@@ -26,7 +27,7 @@ public class DefaultServiceRegistry implements ServiceRegistry{
     private static final Set<String> registeredService = ConcurrentHashMap.newKeySet();
     
     @Override
-    public synchronized  <T> void register(T service) {
+    public synchronized  <T> void addServiceProvider(T service) {
         String serviceName = service.getClass().getCanonicalName();
         if (registeredService.contains(serviceName)) return;
         //得到该服务对象的类实现的所有接口
@@ -45,7 +46,7 @@ public class DefaultServiceRegistry implements ServiceRegistry{
     }
     
     @Override
-    public Object getService(String serviceName) {
+    public Object getServiceProvider(String serviceName) {
         Object service = serviceMap.get(serviceName);
         if (service == null){
             throw new RpcException(RpcError.SERVICE_NOT_FOUND);

@@ -1,21 +1,18 @@
-package org.chw.rpc.netty.client;
+package org.chw.rpc.transport.netty.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
-import org.chw.rpc.RpcClient;
-import org.chw.rpc.codec.CommonDecoder;
-import org.chw.rpc.codec.CommonEncoder;
+import org.chw.rpc.transport.RpcClient;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
 import org.chw.rpc.enumeration.RpcError;
 import org.chw.rpc.exception.RpcException;
+import org.chw.rpc.registry.NacosServiceRegistry;
+import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.serializer.CommonSerializer;
-import org.chw.rpc.serializer.HessianSerializer;
-import org.chw.rpc.serializer.KryoSerializer;
 import org.chw.rpc.util.RpcMessageChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +45,11 @@ public class NettyClient implements RpcClient {
                 .option(ChannelOption.SO_KEEPALIVE , true);
     }
     
-    private String host;
-    private int port;
     private CommonSerializer serializer;
+    private final ServiceRegistry serviceRegistry;
     
-    public NettyClient(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public NettyClient() {
+        serviceRegistry = new NacosServiceRegistry();
     }
     
     @Override
@@ -76,8 +71,10 @@ public class NettyClient implements RpcClient {
         AtomicReference<Object> result = new AtomicReference<>(null);
         
         try{
+            //获取服务名称对应的服务提供地址
+            InetSocketAddress inetSocketAddress = serviceRegistry.lookupService(rpcRequest.getInterfaceName());
             //获取channel
-            Channel channel = ChannelProvider.get(new InetSocketAddress(host, port), serializer);
+            Channel channel = ChannelProvider.get(inetSocketAddress, serializer);
             //如果channel已经获得且处于活跃状态
             if(channel.isActive()) {
                 //向channel写入rpcRequest对象并刷新，添加一个监听器来处理操作结果。如果future1操作成功，打印“客户端发送消息”信息；否则，打印相应的错误信息。

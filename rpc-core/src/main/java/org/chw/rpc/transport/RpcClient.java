@@ -1,4 +1,4 @@
-package org.chw.rpc;
+package org.chw.rpc.transport;
 
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.serializer.CommonSerializer;

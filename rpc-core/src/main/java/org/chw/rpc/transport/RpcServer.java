@@ -1,4 +1,4 @@
-package org.chw.rpc;
+package org.chw.rpc.transport;
 
 import org.chw.rpc.serializer.CommonSerializer;
 
@@ -9,7 +9,16 @@ import org.chw.rpc.serializer.CommonSerializer;
  * @Date 2023/4/19
  **/
 public interface RpcServer {
-    void start(int port);
+    void start();
     
     void setSerializer(CommonSerializer serializer);
+    
+    /**
+     * 向nacos注册服务
+     * @param service
+     * @param serviceClass
+     * @param <T>
+     */
+    <T> void publishService(Object service, Class<T> serviceClass);
+    
 }

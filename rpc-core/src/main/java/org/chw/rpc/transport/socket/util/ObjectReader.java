@@ -1,4 +1,4 @@
-package org.chw.rpc.socket.util;
+package org.chw.rpc.transport.socket.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

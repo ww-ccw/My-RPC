@@ -2,6 +2,7 @@ package org.chw.rpc;
 
 
 import org.chw.rpc.entity.RpcRequest;
+import org.chw.rpc.transport.RpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,7 @@ public class RpcClientProxy implements InvocationHandler {
     
     private static final Logger logger = LoggerFactory.getLogger(RpcClientProxy.class);
     
-    private final  RpcClient client;
+    private final RpcClient client;
     
     public RpcClientProxy(RpcClient client) {
         this.client = client;

@@ -7,7 +7,7 @@
     <groupId>org.chw</groupId>
     <artifactId>My-RPC</artifactId>
     <packaging>pom</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
 
     <modules>
         <module>rpc-common</module>

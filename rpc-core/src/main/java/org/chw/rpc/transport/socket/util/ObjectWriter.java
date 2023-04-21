@@ -1,4 +1,4 @@
-package org.chw.rpc.socket.util;
+package org.chw.rpc.transport.socket.util;
 
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.enumeration.PackageType;

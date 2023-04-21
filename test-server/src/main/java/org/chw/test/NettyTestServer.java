@@ -1,10 +1,9 @@
 package org.chw.test;
 
 import org.chw.rpc.api.HelloService;
-import org.chw.rpc.netty.server.NettyServer;
-import org.chw.rpc.registry.DefaultServiceRegistry;
-import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.serializer.KryoSerializer;
+import org.chw.rpc.transport.RpcServer;
+import org.chw.rpc.transport.netty.server.NettyServer;
 
 /**
  * @Author CHW
@@ -13,11 +12,9 @@ import org.chw.rpc.serializer.KryoSerializer;
 public class NettyTestServer {
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl();
-        
-        ServiceRegistry registry = new DefaultServiceRegistry();
-        registry.register(helloService);
-        NettyServer server = new NettyServer();
-        server.setSerializer(new KryoSerializer());
-        server.start(9999);
+        RpcServer rpcServer = new NettyServer("localhost" , 9998);
+        rpcServer.setSerializer(new KryoSerializer());
+        rpcServer.publishService(helloService,HelloService.class);
+        rpcServer.start();
     }
 }

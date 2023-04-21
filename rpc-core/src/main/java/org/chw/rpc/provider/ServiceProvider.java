@@ -7,7 +7,8 @@ package org.chw.rpc.provider;
  * @Date 2023/4/21
  **/
 public interface ServiceProvider {
-    <T> void addServiceProvider(T service);
+    <T> void addServiceProvider(T service, Class<T> serviceClass);
+    
     
     Object getServiceProvider(String serviceName);
 }

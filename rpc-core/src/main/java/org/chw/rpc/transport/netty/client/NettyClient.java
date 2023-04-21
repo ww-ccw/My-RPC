@@ -5,6 +5,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.AttributeKey;
+import org.chw.rpc.registry.NacosServiceDiscovery;
+import org.chw.rpc.registry.ServiceDiscovery;
 import org.chw.rpc.transport.RpcClient;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
@@ -46,10 +48,10 @@ public class NettyClient implements RpcClient {
     }
     
     private CommonSerializer serializer;
-    private final ServiceRegistry serviceRegistry;
+    private final ServiceDiscovery serviceDiscovery;
     
     public NettyClient() {
-        serviceRegistry = new NacosServiceRegistry();
+        serviceDiscovery = new NacosServiceDiscovery();
     }
     
     @Override
@@ -72,7 +74,7 @@ public class NettyClient implements RpcClient {
         
         try{
             //获取服务名称对应的服务提供地址
-            InetSocketAddress inetSocketAddress = serviceRegistry.lookupService(rpcRequest.getInterfaceName());
+            InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(rpcRequest.getInterfaceName());
             //获取channel
             Channel channel = ChannelProvider.get(inetSocketAddress, serializer);
             //如果channel已经获得且处于活跃状态

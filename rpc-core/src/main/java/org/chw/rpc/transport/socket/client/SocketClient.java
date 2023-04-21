@@ -1,5 +1,7 @@
 package org.chw.rpc.transport.socket.client;
 
+import org.chw.rpc.registry.NacosServiceDiscovery;
+import org.chw.rpc.registry.ServiceDiscovery;
 import org.chw.rpc.transport.RpcClient;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
@@ -14,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
@@ -25,13 +28,12 @@ import java.net.Socket;
 public class SocketClient implements RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(SocketClient.class);
     
-    private String host;
-    private int port;
+    private final ServiceDiscovery serviceDiscovery;
+    
     private CommonSerializer serializer;
     
-    public SocketClient(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public SocketClient() {
+        this.serviceDiscovery = new NacosServiceDiscovery();
     }
     
     @Override
@@ -48,8 +50,10 @@ public class SocketClient implements RpcClient {
             logger.error("未设置序列化器");
             throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
         }
-        
-        try(Socket socket = new Socket(host , port)){
+        InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(rpcRequest.getInterfaceName());
+    
+        try(Socket socket = new Socket()){
+            socket.connect(inetSocketAddress);
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = socket.getInputStream();
             ObjectWriter.writeObject(outputStream, rpcRequest, serializer);

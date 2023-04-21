@@ -13,7 +13,7 @@ import org.chw.rpc.transport.socket.client.SocketClient;
  **/
 public class SocketTestClient {
     public static void main(String[] args) {
-        SocketClient client = new SocketClient("127.0.0.1", 9999);
+        SocketClient client = new SocketClient();
         client.setSerializer(new KryoSerializer());
         RpcClientProxy proxy = new RpcClientProxy(client);
         HelloService helloService = proxy.getProxy(HelloService.class);

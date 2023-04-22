@@ -2,9 +2,9 @@ package org.chw.rpc.transport.netty.client;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.chw.rpc.entity.RpcResponse;
+import org.chw.rpc.util.SingletonFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +18,12 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse>
     
     private static final Logger logger = LoggerFactory.getLogger(NettyClientHandler.class);
     
+    private final UnprocessedRequests unprocessedRequests;
+    
+    public NettyClientHandler() {
+        this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+    }
+    
     /**
      * 该方法是一个ChannelHandler处理RPC响应消息的回调方法。当通道接收到一个RpcResponse消息时
      *
@@ -28,12 +34,8 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<RpcResponse>
     protected void channelRead0(ChannelHandlerContext ctx, RpcResponse msg) throws Exception {
         try{
             logger.info(String.format("客户端接受到消息:%s", msg));
-            //创建了一个AttributeKey对象，指定其名称为"rpcResponse"
-            AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse" + msg.getRequestId());
-            //获取了通道channel的AttributeMap对象，并在其上调用set()方法将"rpcResponse"属性的值设置为msg
-            ctx.channel().attr(key).set(msg);
-            //关闭通道
-            ctx.channel().close();
+            //将该请求移出未完成名单，并设置返回结果
+            unprocessedRequests.complete(msg);
         }finally {
             // 释放消息引用计数器
             ReferenceCountUtil.release(msg);

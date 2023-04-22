@@ -2,6 +2,9 @@ package org.chw.rpc.transport;
 
 
 import org.chw.rpc.entity.RpcRequest;
+import org.chw.rpc.entity.RpcResponse;
+import org.chw.rpc.transport.netty.client.NettyClient;
+import org.chw.rpc.transport.socket.client.SocketClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +12,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Author chw
@@ -35,19 +40,27 @@ public class RpcClientProxy implements InvocationHandler {
         return (T)Proxy.newProxyInstance(clazz.getClassLoader() , new Class<?>[]{clazz} , this);
     }
     
-    /**
-     * 动态代理的实现，当消费者调用代理对象的方法时就会执行这个方法
-     * 通过代理对象，获得到将要调用的方法所属类名、方法名、方法参数类型、方法参数，
-     * 通过这四个参数构建 RPCRequest对象，并使用该对象发起请求得到返回结果
-     * @return 服务提供者返回的data
-     */
     @Override
+    @SuppressWarnings("unchecked")
     public Object invoke(Object proxy, Method method, Object[] args){
         logger.info("调用方法: {}#{}", method.getDeclaringClass().getName(), method.getName());
-    
+        
         RpcRequest rpcRequest = new RpcRequest( UUID.randomUUID().toString() , method.getDeclaringClass().getName(),
                 method.getName(), args, method.getParameterTypes());
-        //发起请求返回结果
-        return client.sendRequest(rpcRequest);
+        Object result = null;
+        if (client instanceof NettyClient) {
+            CompletableFuture<RpcResponse> completableFuture = (CompletableFuture<RpcResponse>) client.sendRequest(rpcRequest);
+            try {
+                result = completableFuture.get().getData();
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error("方法调用请求发送失败", e);
+                return null;
+            }
+        }
+        if (client instanceof SocketClient) {
+            RpcResponse rpcResponse = (RpcResponse) client.sendRequest(rpcRequest);
+            result = rpcResponse.getData();
+        }
+        return result;
     }
 }

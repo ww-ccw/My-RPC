@@ -7,19 +7,16 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.chw.rpc.codec.CommonDecoder;
 import org.chw.rpc.codec.CommonEncoder;
-import org.chw.rpc.enumeration.RpcError;
-import org.chw.rpc.exception.RpcException;
 import org.chw.rpc.serializer.CommonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.Date;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
- * 用于远程连接获取Channel
+ * 用于远程连接获取Channel，使用map保存已有channel，复用资源避，避免重复连接
  *
  * @Author CHW
  * @Date 2023/4/20
@@ -31,8 +28,7 @@ public class ChannelProvider {
     private static EventLoopGroup eventLoopGroup;
     private static Bootstrap bootstrap = initializeBootstrap();
     
-    private static final int MAX_RETRY_COUNT = 5;
-    private static Channel channel = null;
+    private static Map<String, Channel> channels = new ConcurrentHashMap<>();
     
     private static Bootstrap initializeBootstrap() {
         eventLoopGroup = new NioEventLoopGroup();
@@ -49,12 +45,24 @@ public class ChannelProvider {
     }
     
     /**
-     * 获取Channel
+     * 获取Channel，如果已存在该连接，且连接正常直接返回，否则新建连接
      * @param inetSocketAddress 连接地址ip
      * @param serializer 序列化器
      * @return channel
      */
-    public static Channel get(InetSocketAddress inetSocketAddress, CommonSerializer serializer) {
+    public static Channel get(InetSocketAddress inetSocketAddress, CommonSerializer serializer) throws InterruptedException {
+        
+        String key = inetSocketAddress.toString() + serializer.getCode();
+        //已存在该连接，且连接正常直接返回
+        if (channels.containsKey(key)) {
+            Channel channel = channels.get(key);
+            if(channels != null && channel.isActive()) {
+                return channel;
+            } else {
+                channels.remove(key);
+            }
+        }
+        
         //初始化bootstrap
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
             @Override
@@ -65,49 +73,36 @@ public class ChannelProvider {
                         .addLast(new NettyClientHandler());
             }
         });
-        //定义倒计时
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        
+        Channel channel = null;
         try {
-            //尝试连接
-            connect(bootstrap, inetSocketAddress, countDownLatch);
-            //等待连接结束
-            countDownLatch.await();
-        } catch (InterruptedException e) {
+            channel = connect(bootstrap, inetSocketAddress);
+        } catch (ExecutionException e) {
             logger.error("获取channel时有错误发生:", e);
+            return null;
         }
+        channels.put(key, channel);
         return channel;
     }
     
-    private static void connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress, CountDownLatch countDownLatch) {
-        connect(bootstrap, inetSocketAddress, MAX_RETRY_COUNT, countDownLatch);
-    }
+    /**
+     * 使用异步连接，但最后的get还是要阻塞等待连接有结果。
+     */
+    private static Channel connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress) throws ExecutionException, InterruptedException {
+        
+        CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
     
-    private static void connect(Bootstrap bootstrap, InetSocketAddress inetSocketAddress, int retry, CountDownLatch countDownLatch) {
         //尝试连接绑定监听器
         bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener) future -> {
-            //连接成功直接返回
             if (future.isSuccess()) {
                 logger.info("客户端连接成功!");
-                channel = future.channel();
-                countDownLatch.countDown();
-                return;
+                completableFuture.complete(future.channel());
+            } else {
+                throw new IllegalStateException();
             }
-            //重试失败
-            if (retry == 0) {
-                logger.error("客户端连接失败！");
-                countDownLatch.countDown();
-                throw new RpcException(RpcError.CLIENT_CONNECT_SERVER_FAILURE);
-            }
-            // 第几次重连
-            int order = (MAX_RETRY_COUNT - retry) + 1;
-            // 本次重连的间隔
-            int delay = 1 << order;
-            logger.error("{}: 连接失败，第 {} 次重连……", new Date(), order);
-            //config返回BootstrapConfig对象，封装了Bootstrap配置信息。group()方法返回的是一个EventLoopGroup对象
-            //schedule()方法则是在指定的延迟时间后执行给定的任务第一个参数是一个Runnable对象，它封装了要执行的任务；第二个参数是延迟时间；第三个参数是时间单位
-            bootstrap.config().group().schedule(() -> connect(bootstrap, inetSocketAddress, retry - 1, countDownLatch), delay, TimeUnit
-                    .SECONDS);
         });
+        //如果连接还没有结果，这里会阻塞
+        return completableFuture.get();
     }
     
 }

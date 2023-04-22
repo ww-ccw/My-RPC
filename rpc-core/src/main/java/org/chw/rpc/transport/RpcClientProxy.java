@@ -1,8 +1,7 @@
-package org.chw.rpc;
+package org.chw.rpc.transport;
 
 
 import org.chw.rpc.entity.RpcRequest;
-import org.chw.rpc.transport.RpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

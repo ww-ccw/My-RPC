@@ -5,14 +5,15 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.ReferenceCountUtil;
-import org.chw.rpc.RequestHandler;
+import org.chw.rpc.handler.RequestHandler;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
-
-import org.chw.rpc.provider.ServiceProvider;
-import org.chw.rpc.provider.ServiceProviderImpl;
+import org.chw.rpc.util.SingletonFactory;
+import org.chw.rpc.util.ThreadPoolFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutorService;
 
 /**
  * @Author CHW
@@ -21,26 +22,28 @@ import org.slf4j.LoggerFactory;
 public class NettyServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
     
     private static final Logger logger = LoggerFactory.getLogger(NettyServerHandler.class);
+    private static final String THREAD_NAME_PREFIX = "netty-server-handler";
+    private final ExecutorService threadPool;
     private static RequestHandler requestHandler;
-    private static final ServiceProvider serviceProvider;
     
-    static {
-        requestHandler = new RequestHandler();
-        serviceProvider = new ServiceProviderImpl();
+    
+    public NettyServerHandler() {
+        requestHandler = SingletonFactory.getInstance(RequestHandler.class);
+        this.threadPool = ThreadPoolFactory.createDefaultThreadPool(THREAD_NAME_PREFIX);
     }
     
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcRequest msg) throws Exception {
-        try {
-            logger.info("服务器接收到请求: {}", msg);
-            String interfaceName = msg.getInterfaceName();
-            Object service = serviceProvider.getServiceProvider(interfaceName);
-            Object result = requestHandler.handle(msg, service);
-            ChannelFuture future = ctx.writeAndFlush(RpcResponse.success(result , msg.getRequestId()));
-            future.addListener(ChannelFutureListener.CLOSE);
-        } finally {
-            ReferenceCountUtil.release(msg);
-        }
+        threadPool.execute(() -> {
+            try {
+                logger.info("服务器接收到请求: {}", msg);
+                Object result = requestHandler.handle(msg);
+                ChannelFuture future = ctx.writeAndFlush(RpcResponse.success(result , msg.getRequestId()));
+                future.addListener(ChannelFutureListener.CLOSE);
+            } finally {
+                ReferenceCountUtil.release(msg);
+            }
+        });
     }
     
     @Override

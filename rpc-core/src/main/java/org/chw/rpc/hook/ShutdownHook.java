@@ -21,7 +21,7 @@ public class ShutdownHook {
     }
     
     public void addClearAllHook() {
-        logger.info("关闭后将自动注销所有服务");
+        logger.info("注册关闭服务时清理服务注册的钩子");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("开始注销服务");
             NacosUtil.clearRegistry();

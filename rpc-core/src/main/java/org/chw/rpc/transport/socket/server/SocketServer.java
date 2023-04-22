@@ -79,7 +79,7 @@ public class SocketServer implements RpcServer {
             Socket socket ;
             while((socket = serverSocket.accept()) != null){
                 logger.info("客户端连接!\tIP为"+socket.getInetAddress() + ":" + socket.getPort());
-                threadPool.execute(new RequestHandlerThread(socket , serviceProvider , serializer));
+                threadPool.execute(new SocketRequestHandlerThread(socket , serializer));
             }
         } catch (IOException e) {
             logger.error("连接时有错误发生:" , e);

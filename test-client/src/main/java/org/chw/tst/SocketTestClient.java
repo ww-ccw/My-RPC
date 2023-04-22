@@ -2,7 +2,7 @@ package org.chw.tst;
 
 import org.chw.rpc.api.HelloObject;
 import org.chw.rpc.api.HelloService;
-import org.chw.rpc.RpcClientProxy;
+import org.chw.rpc.transport.RpcClientProxy;
 import org.chw.rpc.serializer.KryoSerializer;
 import org.chw.rpc.transport.socket.client.SocketClient;
 

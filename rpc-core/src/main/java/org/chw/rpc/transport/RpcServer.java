@@ -9,9 +9,12 @@ import org.chw.rpc.serializer.CommonSerializer;
  * @Date 2023/4/19
  **/
 public interface RpcServer {
-    void start();
+    /**
+     * 默认序列化器
+     */
+    int DEFAULT_SERIALIZER = CommonSerializer.KRYO_SERIALIZER;
     
-    void setSerializer(CommonSerializer serializer);
+    void start();
     
     /**
      * 向nacos注册服务

@@ -3,7 +3,6 @@ package org.chw.rpc.transport.socket.server;
 import org.chw.rpc.handler.RequestHandler;
 import org.chw.rpc.entity.RpcRequest;
 import org.chw.rpc.entity.RpcResponse;
-import org.chw.rpc.provider.ServiceProvider;
 import org.chw.rpc.serializer.CommonSerializer;
 import org.chw.rpc.transport.socket.util.ObjectReader;
 import org.chw.rpc.transport.socket.util.ObjectWriter;

@@ -13,7 +13,6 @@ public class NettyTestServer {
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl();
         RpcServer rpcServer = new NettyServer("localhost" , 9998);
-        rpcServer.setSerializer(new KryoSerializer());
         rpcServer.publishService(helloService,HelloService.class);
         rpcServer.start();
     }

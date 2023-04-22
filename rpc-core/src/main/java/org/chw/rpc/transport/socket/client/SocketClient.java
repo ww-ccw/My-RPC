@@ -30,26 +30,23 @@ public class SocketClient implements RpcClient {
     
     private final ServiceDiscovery serviceDiscovery;
     
-    private CommonSerializer serializer;
+    private final CommonSerializer serializer;
     
     public SocketClient() {
-        this.serviceDiscovery = new NacosServiceDiscovery();
+        this(DEFAULT_SERIALIZER);
     }
     
-    @Override
-    public void setSerializer(CommonSerializer serializer) {
-        this.serializer = serializer;
+    public SocketClient(Integer serializer) {
+        this.serviceDiscovery = new NacosServiceDiscovery();
+        this.serializer = CommonSerializer.getByCode(serializer);
     }
+    
     
     /**
      * 向消费者发送请求
      */
     public Object sendRequest(RpcRequest rpcRequest ){
-    
-        if(serializer == null) {
-            logger.error("未设置序列化器");
-            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
-        }
+        
         InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(rpcRequest.getInterfaceName());
     
         try(Socket socket = new Socket()){

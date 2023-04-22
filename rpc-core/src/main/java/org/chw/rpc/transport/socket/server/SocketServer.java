@@ -6,8 +6,6 @@ import org.chw.rpc.provider.ServiceProvider;
 import org.chw.rpc.provider.ServiceProviderImpl;
 import org.chw.rpc.registry.NacosServiceRegistry;
 import org.chw.rpc.transport.RpcServer;
-import org.chw.rpc.enumeration.RpcError;
-import org.chw.rpc.exception.RpcException;
 import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.serializer.CommonSerializer;
 import org.chw.rpc.util.ThreadPoolFactory;
@@ -38,14 +36,19 @@ public class SocketServer implements RpcServer {
     //本地服务表
     private final ServiceProvider serviceProvider;
     //序列化器
-    private CommonSerializer serializer;
+    private final CommonSerializer serializer;
     
     public SocketServer(String host, int port) {
+        this(host, port, DEFAULT_SERIALIZER);
+    }
+    
+    public SocketServer(String host, int port , Integer serializer) {
         this.host = host;
         this.port = port;
         threadPool = ThreadPoolFactory.createDefaultThreadPool("socket-rpc-server");
         this.serviceRegistry = new NacosServiceRegistry();
         this.serviceProvider = new ServiceProviderImpl();
+        this.serializer = CommonSerializer.getByCode(serializer);
     }
     
     @Override
@@ -56,21 +59,12 @@ public class SocketServer implements RpcServer {
 
     }
     
-    @Override
-    public void setSerializer(CommonSerializer serializer) {
-        this.serializer = serializer;
-    }
     
     /**
      * 等待到一个请求就开启一个工作线程处理
      */
     @Override
     public void start(){
-    
-        if(serializer == null) {
-            logger.error("未设置序列化器");
-            throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
-        }
         
         try(ServerSocket serverSocket = new ServerSocket()) {
             serverSocket.bind(new InetSocketAddress(host, port));

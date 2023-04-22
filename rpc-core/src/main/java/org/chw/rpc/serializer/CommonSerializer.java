@@ -6,6 +6,12 @@ package org.chw.rpc.serializer;
  * @Date 2023/4/19
  **/
 public interface CommonSerializer {
+    
+    Integer KRYO_SERIALIZER = 0;
+    Integer JSON_SERIALIZER = 1;
+    Integer HESSIAN_SERIALIZER = 2;
+    Integer PROTOBUF_SERIALIZER = 3;
+    
     /**
      * 将对象序列化为json格式字节
      */

@@ -1,6 +1,7 @@
 package org.chw.rpc.hook;
 
 import org.chw.rpc.util.NacosUtil;
+import org.chw.rpc.util.ThreadPoolFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,7 @@ public class ShutdownHook {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("开始注销服务");
             NacosUtil.clearRegistry();
+            ThreadPoolFactory.shutDownAll();
         }));
     }
 }

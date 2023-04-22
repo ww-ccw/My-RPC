@@ -16,7 +16,6 @@ public class SocketTestServer {
     public static void main(String[] args) {
         HelloService helloService = new HelloServiceImpl2();
         RpcServer rpcServer = new SocketServer("localhost" , 9999);
-        rpcServer.setSerializer(new HessianSerializer());
         rpcServer.publishService(helloService, HelloService.class);
         rpcServer.start( );
     }

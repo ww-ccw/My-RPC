@@ -32,7 +32,8 @@ public class ThreadPoolFactory {
     
     
     /**
-     * 创建 ThreadFactory 。如果threadNamePrefix不为空则使用自建ThreadFactory，否则使用defaultThreadFactory
+     * 创建 ThreadFactory 。如果ThreadNamePrefix为null则使用Executors.defaultThreadFactory创建默认的线程池。
+     * 如果不为null则根据threadNamePrefix设置线程的前缀，daemon为true则为守护线程。
      *
      * @param threadNamePrefix 作为创建的线程名字的前缀
      * @param daemon           指定是否为 Daemon Thread(守护线程)

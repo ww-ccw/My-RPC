@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class NettyClient implements RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(NettyClient.class);
     
-    
+    private static final EventLoopGroup group;
     /**
      * 用于配置和启动Netty客户端的各种参数，例如线程、通道类型、处理器等。一旦配置好了，就可以调用Bootstrap.connect()方法连接到服务器。
      */
@@ -39,7 +39,7 @@ public class NettyClient implements RpcClient {
     static {
         bootstrap = new Bootstrap();
         //EventLoopGroup是Netty的一个线程组，内部维护一组NIO线程，由这些线程负责连接、读写等网络操作
-        EventLoopGroup group = new NioEventLoopGroup();
+        group = new NioEventLoopGroup();
         bootstrap.group(group)
                 //指定连接类型为NIO
                 .channel(NioSocketChannel.class)
@@ -77,29 +77,32 @@ public class NettyClient implements RpcClient {
             InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(rpcRequest.getInterfaceName());
             //获取channel
             Channel channel = ChannelProvider.get(inetSocketAddress, serializer);
-            //如果channel已经获得且处于活跃状态
-            if(channel.isActive()) {
-                //向channel写入rpcRequest对象并刷新，添加一个监听器来处理操作结果。如果future1操作成功，打印“客户端发送消息”信息；否则，打印相应的错误信息。
-                channel.writeAndFlush(rpcRequest).addListener(future1 -> {
-                    if (future1.isSuccess()){
-                        logger.info(String.format("客户端发送消息: %s" , rpcRequest.toString()));
-                    }else {
-                        logger.error("发送消息时有错误发生:" , future1.cause());
-                    }
-                });
-                //关闭channel
-                channel.closeFuture().sync();
-                //创建一个属性键key，用于获取channel的RpcResponse属性
-                AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse" + rpcRequest.getRequestId());
-                RpcResponse rpcResponse = channel.attr(key).get();
-                RpcMessageChecker.check(rpcRequest, rpcResponse);
-                
-                result.set(rpcResponse.getData());
-            } else {
-                System.exit(0);
+            //如果channel已经关闭
+            if (!channel.isActive()) {
+                group.shutdownGracefully();
+                return null;
             }
+           
+            //向channel写入rpcRequest对象并刷新，添加一个监听器来处理操作结果。如果future1操作成功，打印“客户端发送消息”信息；否则，打印相应的错误信息。
+            channel.writeAndFlush(rpcRequest).addListener(future1 -> {
+                if (future1.isSuccess()){
+                    logger.info(String.format("客户端发送消息: %s" , rpcRequest.toString()));
+                }else {
+                    logger.error("发送消息时有错误发生:" , future1.cause());
+                }
+            });
+            //关闭channel
+            channel.closeFuture().sync();
+            //创建一个属性键key，用于获取channel的RpcResponse属性
+            AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse" + rpcRequest.getRequestId());
+            RpcResponse rpcResponse = channel.attr(key).get();
+            RpcMessageChecker.check(rpcRequest, rpcResponse);
+            
+            result.set(rpcResponse.getData());
+            
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("发送消息时有错误发生: ", e);
+            Thread.currentThread().interrupt();
         }
         return result.get();
     }

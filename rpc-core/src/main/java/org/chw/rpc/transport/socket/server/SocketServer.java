@@ -1,5 +1,7 @@
 package org.chw.rpc.transport.socket.server;
 
+
+import org.chw.rpc.hook.ShutdownHook;
 import org.chw.rpc.provider.ServiceProvider;
 import org.chw.rpc.provider.ServiceProviderImpl;
 import org.chw.rpc.registry.NacosServiceRegistry;
@@ -70,8 +72,10 @@ public class SocketServer implements RpcServer {
             throw new RpcException(RpcError.SERIALIZER_NOT_FOUND);
         }
         
-        try(ServerSocket serverSocket = new ServerSocket(port)) {
+        try(ServerSocket serverSocket = new ServerSocket()) {
+            serverSocket.bind(new InetSocketAddress(host, port));
             logger.info("服务器正在启动...");
+            ShutdownHook.getShutdownHook().addClearAllHook();
             Socket socket ;
             while((socket = serverSocket.accept()) != null){
                 logger.info("客户端连接!\tIP为"+socket.getInetAddress() + ":" + socket.getPort());

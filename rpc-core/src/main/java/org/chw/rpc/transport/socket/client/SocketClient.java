@@ -1,5 +1,6 @@
 package org.chw.rpc.transport.socket.client;
 
+import org.chw.rpc.loadbalancer.LoadBalancer;
 import org.chw.rpc.registry.NacosServiceDiscovery;
 import org.chw.rpc.registry.ServiceDiscovery;
 import org.chw.rpc.transport.RpcClient;
@@ -39,6 +40,11 @@ public class SocketClient implements RpcClient {
     public SocketClient(Integer serializer) {
         this.serviceDiscovery = new NacosServiceDiscovery();
         this.serializer = CommonSerializer.getByCode(serializer);
+    }
+    
+    public SocketClient(LoadBalancer loadBalancer) {
+        this.serviceDiscovery = new NacosServiceDiscovery(loadBalancer);
+        this.serializer = CommonSerializer.getByCode(DEFAULT_SERIALIZER);
     }
     
     

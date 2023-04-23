@@ -4,6 +4,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.chw.rpc.loadbalancer.LoadBalancer;
 import org.chw.rpc.registry.NacosServiceDiscovery;
 import org.chw.rpc.registry.ServiceDiscovery;
 import org.chw.rpc.transport.RpcClient;
@@ -54,11 +55,14 @@ public class NettyClient implements RpcClient {
         this.serviceDiscovery = new NacosServiceDiscovery();
         this.serializer = CommonSerializer.getByCode(serializer);
         this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
-    
     }
     
+    public NettyClient(LoadBalancer loadBalancer) {
+        this.serviceDiscovery = new NacosServiceDiscovery(loadBalancer);
+        this.serializer = CommonSerializer.getByCode(DEFAULT_SERIALIZER);
+        this.unprocessedRequests = SingletonFactory.getInstance(UnprocessedRequests.class);
+    }
     
-
     
     @Override
     public CompletableFuture<RpcResponse> sendRequest(RpcRequest rpcRequest) {

@@ -1,12 +1,10 @@
 package org.chw.tst;
 
+import org.chw.rpc.api.ByeService;
 import org.chw.rpc.transport.RpcClient;
-
 import org.chw.rpc.transport.RpcClientProxy;
 import org.chw.rpc.api.HelloObject;
 import org.chw.rpc.api.HelloService;
-
-import org.chw.rpc.serializer.HessianSerializer;
 import org.chw.rpc.transport.netty.client.NettyClient;
 
 /**
@@ -19,9 +17,9 @@ public class NettyTestClient {
         RpcClientProxy rpcClientProxy = new RpcClientProxy(client);
         HelloService helloService = rpcClientProxy.getProxy(HelloService.class);
         HelloObject object = new HelloObject(12, "This is a message");
-        for(int i = 0; i < 20; i ++) {
-            String res = helloService.hello(object);
-            System.out.println(res);
-        }
+        String res = helloService.hello(object);
+        System.out.println(res);
+        ByeService byeService = rpcClientProxy.getProxy(ByeService.class);
+        System.out.println(byeService.bye("Nletty"));
     }
 }

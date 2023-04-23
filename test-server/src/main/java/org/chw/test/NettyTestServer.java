@@ -1,7 +1,6 @@
 package org.chw.test;
 
-import org.chw.rpc.api.HelloService;
-import org.chw.rpc.serializer.KryoSerializer;
+import org.chw.rpc.annotation.ServiceScan;
 import org.chw.rpc.transport.RpcServer;
 import org.chw.rpc.transport.netty.server.NettyServer;
 
@@ -9,11 +8,11 @@ import org.chw.rpc.transport.netty.server.NettyServer;
  * @Author CHW
  * @Date 2023/4/19
  **/
+@ServiceScan
 public class NettyTestServer {
     public static void main(String[] args) {
-        HelloService helloService = new HelloServiceImpl();
-        RpcServer rpcServer = new NettyServer("localhost" , 9998);
-        rpcServer.publishService(helloService,HelloService.class);
-        rpcServer.start();
+    
+        RpcServer server = new NettyServer("127.0.0.1", 9999);
+        server.start();
     }
 }

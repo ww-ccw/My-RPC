@@ -18,10 +18,10 @@ public interface RpcServer {
     
     /**
      * 向nacos注册服务
-     * @param service
-     * @param serviceClass
+     * @param service 服务实现类
+     * @param serviceName 服务名
      * @param <T>
      */
-    <T> void publishService(T service, Class<T> serviceClass);
+    <T> void publishService(T service, String serviceName);
     
 }

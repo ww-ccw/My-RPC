@@ -5,6 +5,7 @@ import org.chw.rpc.hook.ShutdownHook;
 import org.chw.rpc.provider.ServiceProvider;
 import org.chw.rpc.provider.ServiceProviderImpl;
 import org.chw.rpc.registry.NacosServiceRegistry;
+import org.chw.rpc.transport.AbstractRpcServer;
 import org.chw.rpc.transport.RpcServer;
 import org.chw.rpc.registry.ServiceRegistry;
 import org.chw.rpc.serializer.CommonSerializer;
@@ -24,17 +25,9 @@ import java.util.concurrent.*;
  * @Author CHW
  * @Date 2023/4/17
  **/
-public class SocketServer implements RpcServer {
-    private static final Logger logger = LoggerFactory.getLogger(SocketServer.class);
-    
+public class SocketServer extends AbstractRpcServer {
     //线程池
     private final ExecutorService threadPool;
-    private final String host;
-    private final int port;
-    //服务注册中心
-    private final ServiceRegistry serviceRegistry;
-    //本地服务表
-    private final ServiceProvider serviceProvider;
     //序列化器
     private final CommonSerializer serializer;
     
@@ -49,16 +42,8 @@ public class SocketServer implements RpcServer {
         this.serviceRegistry = new NacosServiceRegistry();
         this.serviceProvider = new ServiceProviderImpl();
         this.serializer = CommonSerializer.getByCode(serializer);
+        scanServices();
     }
-    
-    @Override
-    public <T> void publishService(T service, Class<T> serviceClass) {
-
-        serviceRegistry.register(serviceClass.getCanonicalName(), new InetSocketAddress(host, port));
-        serviceProvider.addServiceProvider(service, serviceClass);
-
-    }
-    
     
     /**
      * 等待到一个请求就开启一个工作线程处理

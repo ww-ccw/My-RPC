@@ -10,7 +10,7 @@ import io.netty.handler.logging.LoggingHandler;
 
 import io.netty.handler.timeout.IdleStateHandler;
 import org.chw.rpc.hook.ShutdownHook;
-import org.chw.rpc.transport.RpcServer;
+import org.chw.rpc.transport.AbstractRpcServer;
 import org.chw.rpc.codec.CommonDecoder;
 import org.chw.rpc.codec.CommonEncoder;
 import org.chw.rpc.provider.ServiceProvider;
@@ -30,15 +30,7 @@ import java.util.concurrent.TimeUnit;
  * @Author CHW
  * @Date 2023/4/19
  **/
-public class NettyServer implements RpcServer {
-    
-    private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
-    
-    private final String host;
-    private final int port;
-
-    private final ServiceRegistry serviceRegistry;
-    private final ServiceProvider serviceProvider;
+public class NettyServer extends AbstractRpcServer {
     
     private final CommonSerializer serializer;
     
@@ -52,14 +44,7 @@ public class NettyServer implements RpcServer {
         serviceRegistry = new NacosServiceRegistry();
         serviceProvider = new ServiceProviderImpl();
         this.serializer = CommonSerializer.getByCode(serializer);
-    }
-    
-   
-    
-    @Override
-    public <T> void publishService(T service, Class<T> serviceClass) {
-        serviceRegistry.register(serviceClass.getCanonicalName() , new InetSocketAddress(host , port));
-        serviceProvider.addServiceProvider(service, serviceClass);
+        scanServices();
     }
     
     

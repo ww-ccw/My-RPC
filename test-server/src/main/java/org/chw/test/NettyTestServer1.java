@@ -2,19 +2,16 @@ package org.chw.test;
 
 import org.chw.rpc.annotation.ServiceScan;
 import org.chw.rpc.transport.RpcServer;
-import org.chw.rpc.transport.socket.server.SocketServer;
-
+import org.chw.rpc.transport.netty.server.NettyServer;
 
 /**
  * @Author CHW
- * @Date 2023/4/17
- * 服务提供方（服务端）
+ * @Date 2023/4/19
  **/
 @ServiceScan
-public class SocketTestServer {
-    
+public class NettyTestServer1 {
     public static void main(String[] args) {
-        RpcServer server = new SocketServer("127.0.0.1", 9998);
+        RpcServer server = new NettyServer("127.0.0.1", 9997);
         server.start();
     }
 }
